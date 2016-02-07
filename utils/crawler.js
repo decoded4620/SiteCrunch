@@ -4,11 +4,13 @@ var FileSystem = require('../utils/filesystem.js').FileSystem;
 //======================================================================================================================
 
 Crawler.prototype.crawl = crawl;
-
+Crawler.verbose = false;
 function Crawler(fileTypes, ignorePatterns) {
     this.fileTypes      = null;
     this.ignorePatterns = null;
-    console.log("Crawler.Construct(" + fileTypes + ", " + ignorePatterns + ")");
+    
+    if(Crawler.verbose) console.log("Crawler.Construct(" + fileTypes + ", " + ignorePatterns + ")");
+    
     if(fileTypes !== null){
         if(typeof fileTypes === 'string'){
             this.fileTypes  = [fileTypes];
@@ -34,7 +36,7 @@ function Crawler(fileTypes, ignorePatterns) {
         }
     }
     
-    console.log("Crawler.Construct( includes: " + this.fileTypes + ", ignores: " + this.ignorePatterns + ")");
+    if(Crawler.verbose) console.log("Crawler.Construct( includes: " + this.fileTypes + ", ignores: " + this.ignorePatterns + ")");
     this.depth          = 0;
     this.crawlersOpen   = 0;
     
@@ -50,13 +52,13 @@ function crawl(d, capture, callback) {
  var thisRef = this;
  
  if(this.crawlersOpen == 0){
-     console.log("Crawler.crawl() - capturing files in and below > " + d);
+     if(Crawler.verbose) console.log("Crawler.crawl() - capturing files in and below > " + d);
  }
  thisRef.crawlersOpen++;
 
  this.fileSystem.readDir(d, function(err, files) {
      if (err) {
-         console.log("Error: " + err);
+         if(Crawler.verbose) console.log("Error: " + err);
          thisRef.crawlersOpen--;
 
          if (thisRef.crawlersOpen == 0) {
@@ -75,7 +77,7 @@ function crawl(d, capture, callback) {
      var ftLen = thisRef.fileTypes == null ? 0 : thisRef.fileTypes.length;
      var fLen = files === null ? 0 : files.length;
      
-//     console.log("\tchecking " + fLen + " files for capture");
+     if(Crawler.verbose) console.log("\tchecking " + fLen + " files for capture");
      for (var i = 0; i < fLen; ++i) {
          var f = files[i];
          
@@ -88,22 +90,23 @@ function crawl(d, capture, callback) {
          var currPath = d + f;
          var isDir = thisRef.fileSystem.dirExists(currPath);
          if(isDir == true){
-//             console.log("\tdirectory found, crawling children...");
+             if(Crawler.verbose) console.log("\tdirectory found, crawling children...");
              thisRef.crawl(currPath, capture, callback);
          }
          else {
-//             console.log("\tfile found, capturing: " + currPath);
+             if(Crawler.verbose) console.log("\tfile found, capturing: " + currPath);
              
              var fileType = thisRef.fileSystem.getFileType(currPath, true);
              
-//             console.log("\t\t type is: " + fileType + ", check file types: " + thisRef.fileTypes + ", ignorePatterns: " + thisRef.ignorePatterns + "("+thisRef.ignorePatterns+")" );
+             if(Crawler.verbose) console.log("\t\t type is: " + fileType + ", check file types: " + thisRef.fileTypes + ", ignorePatterns: " + thisRef.ignorePatterns + "("+thisRef.ignorePatterns+")" );
              // if file types were included
              // insure that we support this time for the crawl.
              if(thisRef.ignorePatterns != null){
                  for(var j = 0; j < thisRef.ignorePatterns.length; ++j){
                      var p = thisRef.ignorePatterns[j];
+                     
                      if(currPath.indexOf(p) != -1){
-                         console.log("\tignore pattern " + p + " matched " + currPath + " so skipping file!");
+                         if(Crawler.verbose) console.log("\tignore pattern " + p + " matched " + currPath + " so skipping file!");
                          continue;
                      }
                  }
@@ -111,7 +114,7 @@ function crawl(d, capture, callback) {
              
              if(ftLen > 0){
                  if(thisRef.fileTypes != null && thisRef.fileTypes.indexOf(fileType) == -1){
-                     console.log("\ttype: " + fileType + "not supported for this crawler");
+                     if(Crawler.verbose) console.log("\ttype: " + fileType + "not supported for this crawler");
                      continue;
                  }
              }
@@ -122,7 +125,7 @@ function crawl(d, capture, callback) {
 
      thisRef.crawlersOpen--;
 
-     console.log("\tcaptured: " + capture.length + " files, crawlers open: " + thisRef.crawlersOpen);
+     if(Crawler.verbose) console.log("\tcaptured: " + capture.length + " files, crawlers open: " + thisRef.crawlersOpen);
      if (thisRef.crawlersOpen == 0) {
          if (callback != null) {
              callback();

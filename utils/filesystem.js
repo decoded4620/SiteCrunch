@@ -47,8 +47,16 @@ FileSystem.prototype.getPathSep = FSGetPathSeparator;
 //      @param filePath
 FileSystem.prototype.isRelativePath = FSIsRelativePath;
 
+// Used for console logging.
+FileSystem.verbose = false;
+
+/**
+ * Constructor
+ */
 function FileSystem() {
 
+    console.log("FileSystem.CONSTRUCT(VERBOSE: " + FileSystem.verbose + ")");
+    
     this.config = {
         isWin : /^win/.test(process.platform),
         isOsX : process.platform === 'darwin',
@@ -59,7 +67,7 @@ function FileSystem() {
 }
 
 function FSReadDir(dirPath, callback){
-    console.log("FileSystem.readDir (" + dirPath + ")");
+    if(FileSystem.verbose) console.log("FileSystem.readDir (" + dirPath + ")");
     
     fs.readdir(dirPath, function(err, files) {
         if (err) {
@@ -81,7 +89,7 @@ function FSReadDir(dirPath, callback){
  * @returns
  */
 function FSReadFile(filePath, encoding, callback) {
-    //    console.log("FileSystem.readFile(" + filePath + ", " + encoding + ")");
+    if(FileSystem.verbose) console.log("FileSystem.readFile(" + filePath + ", " + encoding + ")");
 
     encoding = encoding || 'utf8';
 
@@ -97,9 +105,12 @@ function FSReadFile(filePath, encoding, callback) {
 
 function FSIsRelativePath(filePath) {
     if (filePath === '' || filePath === null) {
+        if(FileSystem.verbose) console.log("FileSystem.isRelativePath(" + filePath + ") - no path");
         return false;
     }
     else {
+        if(FileSystem.verbose) console.log("FileSystem.isRelativePath(" + filePath + ")");
+        
         if (this.config.isWin) {
             if (filePath.length > 2) {
 
@@ -107,23 +118,28 @@ function FSIsRelativePath(filePath) {
                 var drive = filePath.substring(0, 3);
                 var pathSep = this.getPathSep();
 
+                // if the drive letter is valid
                 if (drive.charAt(1) === ':' && drive.charAt(2) === pathSep) {
                     //test it
                     if (this.dirExists(drive)) {
+                        if(FileSystem.verbose) console.log("\tdrive is valid: " + drive);
                         return false;
                     }
                 }
-                else {
-                    return true;
-                }
+                
+                // on windows, if you type cd '/', it will go to the root of the current drive automatically
+                // so we can keep going if we reach this point and do the checks below.
             }
         }
+        
         if (filePath === this.getPathSep()) {
+            if(FileSystem.verbose) console.log("\troot path!");
             return false;
         }
         else {
             var firstChar = filePath.charAt(0);
-            if (firstChar === '\\' || firstChar === '/') {
+            if ( firstChar === '/') {
+                if(FileSystem.verbose) console.log("*nix absolute path");
                 return false;
             }
 
@@ -132,18 +148,19 @@ function FSIsRelativePath(filePath) {
     }
 }
 /**
- * 
+ * Returns the proper separator for the current platform.
  */
 function FSGetPathSeparator() {
+    // default to *nix system.
+    var sep = '/';
     if (this.config.isWin) {
-        return '\\';
+        sep = '\\';
     }
     else if (this.config.isOsx || this.config.isNix) {
-        return '/';
+        sep = '/';
     }
-
-    // default to *nix system.
-    return '/';
+    if(FileSystem.verbose) console.log("FileSystem.getPathSep() - " + sep);
+    return sep;
 }
 
 /**
@@ -154,7 +171,7 @@ function FSGetFileType(filePath, includeDelimiter) {
     if (!includeDelimiter) {
         ext = ext.substring(1, ext.length);
     }
-    //    console.log("FileSystem.getFileType(" + filePath + ") - " + ext);
+    if(FileSystem.verbose) console.log("FileSystem.getFileType(" + filePath + ") - " + ext);
     return ext;
 }
 
@@ -177,7 +194,7 @@ function FSGetFileDir(filePath) {
     else {
         dirPath = this.getPathSep();
     }
-    //    console.log("FileSystem.getFileDir(" + filePath + ") - " + dirPath);
+    if(FileSystem.verbose) console.log("FileSystem.getFileDir(" + filePath + ") - " + dirPath);
     return dirPath;
 }
 
@@ -189,7 +206,7 @@ function FSFileExists(filePath) {
     stats = fs.lstatSync(filePath);
     // Is it a directory?
     var exists = statis.isFile() && !stats.isDirectory();
-    //    console.log("FileSystem.fileExists(" + filePath + ") - " + exists);
+    if(FileSystem.verbose) console.log("FileSystem.fileExists(" + filePath + ") - " + exists);
     return exists;
 }
 
@@ -201,9 +218,10 @@ function FSDirectoryExists(dirPath) {
     stats = fs.lstatSync(dirPath);
     // Is it a directory?
     var exists = stats.isDirectory();
-    //    console.log("FileSystem.dirExists(" + dirPath + ") - " + exists);
+    if(FileSystem.verbose) console.log("FileSystem.dirExists(" + dirPath + ") - " + exists);
     return exists;
 }
+
 /**
  * Async Create File
  * 
@@ -215,12 +233,14 @@ function FSCreateFile(filePath, fileContent, callback) {
     var dirPath = this.getFileDir(filePath);
     var makeDir = false;
 
-    //    console.log("FScreateFile(" + filePath + ") - directory: " + dirPath);
+    if(FileSystem.verbose) console.log("FileSystem.createFile(" + filePath + ") - directory: " + dirPath);
     try {
         // Query the entry
         stats = fs.lstatSync(filePath);
         // Is it a directory?
         makeDir = !stats.isDirectory();
+        
+        if(FileSystem.verbose) console.log("\tneeds to make directory? " + (makeDir ? 'true' : 'false'));
     }
     catch (e) {
         makeDir = true;
@@ -232,12 +252,18 @@ function FSCreateFile(filePath, fileContent, callback) {
                 var fd = fs.openSync(filePath, 'w');
 
                 fs.writeFile(filePath, fileContent, function(err) {
+                    
+                    if(FileSystem.verbose) console.log("\tfile " + filePath + " created!");
+                    
                     if (callback != null) {
                         callback(err, filePath);
                     }
                 });
             }
             else {
+                
+                if(FileSystem.verbose) console.log("\tfailed to create directory: " + dirPath);
+                
                 if (callback != null) {
                     callback(err, filePath);
                 }
@@ -245,7 +271,13 @@ function FSCreateFile(filePath, fileContent, callback) {
         });
     }
     else {
-        fs.writeFile(filePath, fileContent, function(err) {
+        fs.writeFile(filePath, fileContent, function(err) { 
+            if(!err){
+                if(FileSystem.verbose) console.log("\tfile " + filePath + " created!");
+            }
+            else{
+                console.log(err);
+            }
             if (callback != null) {
                 callback(err, filePath);
             }
