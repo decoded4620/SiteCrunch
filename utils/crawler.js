@@ -90,7 +90,6 @@ function crawl(d, capture, callback) {
          var currPath = d + f;
          var isDir = thisRef.fileSystem.dirExists(currPath);
          if(isDir == true){
-             if(Crawler.verbose) console.log("\tdirectory found, crawling children...");
              thisRef.crawl(currPath, capture, callback);
          }
          else {
@@ -126,6 +125,7 @@ function crawl(d, capture, callback) {
      thisRef.crawlersOpen--;
 
      if(Crawler.verbose) console.log("\tcaptured: " + capture.length + " files, crawlers open: " + thisRef.crawlersOpen);
+     
      if (thisRef.crawlersOpen == 0) {
          if (callback != null) {
              callback();

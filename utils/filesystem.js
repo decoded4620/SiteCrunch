@@ -12,11 +12,16 @@ var path = require('path');
 //      @param callback
 FileSystem.prototype.createFile = FSCreateFile;
 
-// FileSystem.createFile(filePath, encoding, callback)
+// FileSystem.readFile(filePath, encoding, callback)
 //      @param filePath
 //      @param encoding  (default 'utf8')
 //      @param callback
 FileSystem.prototype.readFile = FSReadFile;
+
+// FileSystem.readFileSync(filePath, encoding)
+//      @param filePath
+//      @param encoding  (default 'utf8')
+FileSystem.prototype.readFileSync = FSReadFileSync;
 
 // FileSystem.createFile(filePath, encoding, callback)
 //      @param dirPath
@@ -55,7 +60,7 @@ FileSystem.verbose = false;
  */
 function FileSystem() {
 
-    console.log("FileSystem.CONSTRUCT(VERBOSE: " + FileSystem.verbose + ")");
+    if(FileSystem.verbose) console.log("FileSystem.Construct()");
     
     this.config = {
         isWin : /^win/.test(process.platform),
@@ -78,6 +83,14 @@ function FSReadDir(dirPath, callback){
             callback(err, files);
         }
     });
+}
+
+function FSReadFileSync(filePath, encoding){
+    if(FileSystem.verbose) console.log("FileSystem.readFile(" + filePath + ", " + encoding + ")");
+
+    encoding = encoding || 'utf8';
+
+    return fs.readFileSync(filePath, encoding);
 }
 
 /**
@@ -205,7 +218,7 @@ function FSFileExists(filePath) {
     // Query the entry
     stats = fs.lstatSync(filePath);
     // Is it a directory?
-    var exists = statis.isFile() && !stats.isDirectory();
+    var exists = stats.isFile() && !stats.isDirectory();
     if(FileSystem.verbose) console.log("FileSystem.fileExists(" + filePath + ") - " + exists);
     return exists;
 }

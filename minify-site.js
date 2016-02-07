@@ -2,8 +2,8 @@
 var sleep = require('sleep');
 
 // Powerful Fun with Command Line Arguments.
-//var ArguMints = require('argumints').ArguMints;
-var ArguMints = require('Z:\\workspaces\\github\\argumints\\argumints.js').ArguMints;
+var ArguMints = require('argumints').ArguMints;
+//var ArguMints = require('Z:\\workspaces\\github\\argumints\\argumints.js').ArguMints;
 
 // Crawls the file system and captures files.
 var Crawler = require('./utils/crawler.js').Crawler;
@@ -25,7 +25,7 @@ var XMLMinifier = require('./minifiers/xmlminifier.js').XMLMinifier;
 //This is shared throughout the component
 //so that all objects can benefit from 
 //input configuration by the user.
-global.commandArgs = {
+commandArgs = {
       
   // built in functions
   isVerbose:function(){
@@ -34,24 +34,32 @@ global.commandArgs = {
   }
 };
 
+ArguMints.verbose = true;
+
 // yummy, ArguMints!
 var arguMints = new ArguMints({
-    verbose:true,                       // verbosity killed the cat
     treatBoolStringsAsBoolean:true,     // input args like x=true will result in x being 'true ( boolean )' rather than "true" (string)
     treatNullStringsAsNull:true,        // input args like x=null will result in x being NULL (the value type) rather than "null" (string)
     treatRegExStringsAsRegEx:true,      // input args like x=/*.js/ will result in x being an instance of RegExp (i.e. new RegExp(/*.js/))
     parseJsonStrings:true
 })
-// build the table
-.retort()
-// copy all input arguments and merge them into the
-// commandArgs table.
-.copyTo(global.commandArgs, true);
+    // build the table
+    .retort()
+    // copy all input arguments and merge them into the
+    // commandArgs table.
+    .copyTo(commandArgs, true);
 
-console.log("Starting Site Minifier Tool");
+var isVerbose = commandArgs.isVerbose();
 
-FileSystem.verbose = global.commandArgs.isVerbose();
-Crawler.verbose = global.commandArgs.isVerbose();
+FileSystem.verbose = isVerbose;
+Crawler.verbose = isVerbose;
+MinifySite.verbose = isVerbose;
+XMLMinify.verbose = isVerbose;
+HTMLMinify.verbose = isVerbose;
+JSONMinify.verbose = isVerbose;
+JSMinify.verbose = isVerbose;
+
+if(isVerbose) console.log("Starting Site Minifier Tool");
 // first two args
 var scriptArgs = arguMints.getScriptArgs(); //process.argv.slice(0, 2);
 
@@ -67,18 +75,18 @@ var scriptPath = scriptArgs[1];
 // directory containing this script
 var scriptDir = rootFs.getFileDir(scriptPath);
 
-console.log(new Dumper().dump(global.commandArgs));
+console.log(new Dumper().dump(commandArgs));
 
 // default script
 var script = scriptDir + 'runner.json';
 
 // can be overridden using cmd line args
-if (global.commandArgs.runner != null) {
-    if (rootFs.isRelativePath(global.commandArgs.runner)) {
-        script = scriptDir + global.commandArgs.runner;
+if (commandArgs.runner != null) {
+    if (rootFs.isRelativePath(commandArgs.runner)) {
+        script = scriptDir + commandArgs.runner;
     }
     else {
-        script = global.commandArgs.runner;
+        script = commandArgs.runner;
     }
 }
 
@@ -103,6 +111,7 @@ rootFs.readFile(script, 'utf8', function(err, jsonData) {
     minifysite.run();
 });
 
+XMLMinify.verbose = false;
 // helper prototypes
 XMLMinify.prototype.minifyEachAndEveryXml = minifyEachAndEveryXml;
 HTMLMinify.prototype.minifyEachAndEveryHtml = minifyEachAndEveryHtml;
@@ -111,6 +120,7 @@ JSMinify.prototype.minifyEachAndEveryJs = minifyEachAndEveryJs;
 JSMinify.prototype.minifyAsOneJs = minifyAsOneJs;
 
 // main prototype
+MinifySite.verbose = false;
 MinifySite.prototype.run = MSRun;
 MinifySite.prototype.runRecursive = MSRunRecursive;
 MinifySite.prototype.minifyAndConcatCss = MSMinifyAndConcatCss;
@@ -124,18 +134,18 @@ MinifySite.prototype.minifyXml = MSMinifyXml;
 // MinifySite implementation
 // ======================================================================================================================
 function MinifySite(q) {
-    //    console.log("MinifySite::Construct() - " + (q == null ? 0 : q.length) + " items in the queue, directory is: "
-    //            + process.cwd());
+    if(MinifySite.verbose) console.log("MinifySite::Construct() - " + (q == null ? 0 : q.length) + " items in the queue, directory is: "
+                + process.cwd());
     this.queue = q;
 }
 
 
 function MSMinifyCss(src, dest, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyCss(" + src + ", " + dest + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyCss(" + src + ", " + dest + ")");
     
     var thisRef = this;
     new CSSMinifier(fileTypes, ignorePatterns).minifyEachAndEveryCss(src, dest, function(newFile) {
-        if(global.commandArgs.isVerbose()) console.log("\tcompleted: " + newFile);
+        if(MinifySite.verbose) console.log("\tcompleted: " + newFile);
     }, function() {
         if (callback != null) {
             callback(null, null);
@@ -144,7 +154,7 @@ function MSMinifyCss(src, dest, fileTypes, ignorePatterns, callback) {
 }
 
 function MSMinifyAndConcatCss(src, destFile, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyAndConcatCss(" + src + ", " + destFile + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyAndConcatCss(" + src + ", " + destFile + ")");
     var thisRef = this;
     new CSSMinifier(fileTypes, ignorePatterns).minifyAsOneCss(src, destFile, function() {
         if (callback != null) {
@@ -154,7 +164,7 @@ function MSMinifyAndConcatCss(src, destFile, fileTypes, ignorePatterns, callback
 }
 
 function MSMinifyJs(src, dest, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyJs(" + src + ", " + dest + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyJs(" + src + ", " + dest + ")");
     var thisRef = this;
     new JSMinify(fileTypes, ignorePatterns).minifyEachAndEveryJs(src, dest, function(err, input, output) {
     }, function() {
@@ -165,7 +175,7 @@ function MSMinifyJs(src, dest, fileTypes, ignorePatterns, callback) {
 }
 
 function MSMinifyAndConcatJs(src, dest, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyAndConcatJs(" + src + ", " + dest + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyAndConcatJs(" + src + ", " + dest + ")");
     var thisRef = this;
     new JSMinify(fileTypes, ignorePatterns).minifyAsOneJs(src, dest, function() {
         if (callback != null) {
@@ -175,7 +185,7 @@ function MSMinifyAndConcatJs(src, dest, fileTypes, ignorePatterns, callback) {
 }
 
 function MSMinifyJson(src, dest, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyJson(" + src + ", " + dest + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyJson(" + src + ", " + dest + ")");
     new JSONMinify(fileTypes, ignorePatterns).minifyEachAndEveryJson(src, dest, function(err, input, output) {
     }, function() {
         if (callback != null) {
@@ -185,7 +195,7 @@ function MSMinifyJson(src, dest, fileTypes, ignorePatterns, callback) {
 }
 
 function MSMinifyHtml(src, dest, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyHtml(" + src + ", " + dest + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyHtml(" + src + ", " + dest + ")");
     new HTMLMinify(fileTypes, ignorePatterns).minifyEachAndEveryHtml(src, dest, function(err, input, output) {
     }, function() {
         if (callback != null) {
@@ -196,7 +206,7 @@ function MSMinifyHtml(src, dest, fileTypes, ignorePatterns, callback) {
 }
 
 function MSMinifyXml(src, dest, fileTypes, ignorePatterns, callback) {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.MSMinifyXml(" + src + ", " + dest + ")");
+    if(MinifySite.verbose) console.log("MinifySite.MSMinifyXml(" + src + ", " + dest + ")");
     new XMLMinify(fileTypes, ignorePatterns).minifyEachAndEveryXml(src, dest, function(err, input, output) {
     }, function() {
         if (callback != null) {
@@ -218,7 +228,7 @@ function MSRunRecursive() {
 
         if (nextItem) {
             
-            if(global.commandArgs.isVerbose()) console.log(nextItem.src + "->" + nextItem.dest + ", format: " + nextItem.format + ", type: "
+            if(MinifySite.verbose) console.log(nextItem.src + "->" + nextItem.dest + ", format: " + nextItem.format + ", type: "
                     + nextItem.type);
             
             // map methods to the current item type
@@ -284,7 +294,7 @@ function MSRunRecursive() {
  * Runs MinifySite
  */
 function MSRun() {
-    if(global.commandArgs.isVerbose()) console.log("MinifySite.run() - processing " + this.queue.length + " entries from runner configuration...");
+    if(MinifySite.verbose) console.log("MinifySite.run() - processing " + this.queue.length + " entries from runner configuration...");
     this.runRecursive();
 }
 
@@ -294,7 +304,6 @@ function MSRun() {
 
 function XMLMinify(fileTypes, ignorePatterns) {
     
-    console.log(typeof fileTypes + ", " + typeof ignorePatterns);
     if (typeof fileTypes !== 'undefined') {
         this.fileTypes = fileTypes;
     }
@@ -308,10 +317,10 @@ function XMLMinify(fileTypes, ignorePatterns) {
         this.ignorePatterns = null;
     }
 
-//    console.log("XMLMinify.Construct( includes: " + this.fileTypes + ", ignores: " + this.ignorePatterns + ")");
+    if(XMLMinify.verbose) console.log("XMLMinify.Construct( includes: " + this.fileTypes + ", ignores: " + this.ignorePatterns + ")");
 }
 function minifyEachAndEveryXml(src, dist, cbEachOne, cbComplete) {
-    if(global.commandArgs.isVerbose()) console.log("XMLMinify.minifyEachAndEveryXml(src: " + src + " => dist: " + dist + ")");
+    if(XMLMinify.verbose) console.log("XMLMinify.minifyEachAndEveryXml(src: " + src + " => dist: " + dist + ")");
     capture = [];
 
     new Crawler(this.fileTypes, this.ignorePatterns).crawl(src, capture, function() {
@@ -336,7 +345,7 @@ function minifyEachAndEveryXml(src, dist, cbEachOne, cbComplete) {
 
                 if (asyncScope.inFlight == 0) {
                     
-                    if(global.commandArgs.isVerbose()) console.log("\tminifyEachAndEveryXml finished!");
+                    if(XMLMinify.verbose) console.log("\tminifyEachAndEveryXml finished!");
                     
                     if (cbComplete != null) {
                         cbComplete();
@@ -365,11 +374,11 @@ function HTMLMinify(fileTypes, ignorePatterns) {
         this.ignorePatterns = null;
     }
 
-    console.log("HTMLMinify.Construct( includes: " + this.fileTypes + ", ignores: " + this.ignorePatterns + ")");
+    if(HTMLMinify.verbose) console.log("HTMLMinify.Construct( includes: " + this.fileTypes + ", ignores: " + this.ignorePatterns + ")");
 }
 function minifyEachAndEveryHtml(src, dist, cbEachOne, cbComplete) {
 
-    if(global.commandArgs.isVerbose()) console.log("JSONMinify.minifyEachAndEveryHtml(src: " + src + " => dist: " + dist + ")");
+    if(HTMLMinify.verbose) console.log("JSONMinify.minifyEachAndEveryHtml(src: " + src + " => dist: " + dist + ")");
     capture = [];
 
     new Crawler(this.fileTypes, this.ignorePatterns).crawl(src, capture, function() {
@@ -392,7 +401,7 @@ function minifyEachAndEveryHtml(src, dist, cbEachOne, cbComplete) {
                 }
 
                 if (asyncScope.inFlight == 0) {
-                    if(global.commandArgs.isVerbose()) console.log("\tminifyEachAndEveryHtml finished!");
+                    if(HTMLMinify.verbose) console.log("\tminifyEachAndEveryHtml finished!");
                     if (cbComplete != null) {
                         cbComplete();
                     }
@@ -420,11 +429,11 @@ function JSONMinify(fileTypes, ignorePatterns) {
         this.ignorePatterns = null;
     }
 
-    if(global.commandArgs.isVerbose()) console.log("JSONMinify.Construct(" + this.fileTypes + ", " + this.ignorePatterns + ")");
+    if(JSONMinify.verbose) console.log("JSONMinify.Construct(" + this.fileTypes + ", " + this.ignorePatterns + ")");
 }
 function minifyEachAndEveryJson(src, dist, cbEachOne, cbComplete) {
 
-    if(global.commandArgs.isVerbose()) console.log("JSONMinify.minifyEachAndEveryJson(src: " + src + " => dist: " + dist + ")");
+    if(JSONMinify.verbose) console.log("JSONMinify.minifyEachAndEveryJson(src: " + src + " => dist: " + dist + ")");
     capture = [];
 
     new Crawler(this.fileTypes, this.ignorePatterns).crawl(src, capture, function() {
@@ -448,7 +457,7 @@ function minifyEachAndEveryJson(src, dist, cbEachOne, cbComplete) {
                 }
 
                 if (asyncScope.inFlight == 0) {
-                    if(global.commandArgs.isVerbose()) console.log("\tminifyEachAndEveryJson finished!");
+                    if(JSONMinify.verbose) console.log("\tminifyEachAndEveryJson finished!");
                     if (cbComplete != null) {
                         cbComplete();
                     }
@@ -476,10 +485,10 @@ function JSMinify(fileTypes, ignorePatterns) {
         this.ignorePatterns = null;
     }
 
-//    console.log("JSMinify.Construct(" + this.fileTypes + ", " + this.ignorePatterns + ")");
+    if(JSMinify.verbose) console.log("JSMinify.Construct(" + this.fileTypes + ", " + this.ignorePatterns + ")");
 }
 function minifyAsOneJs(src, distFile, callback) {
-    if(global.commandArgs.isVerbose()) console.log("JSMinify.minifyAsOneJs(" + src + " => " + distFile + ")");
+    if(JSMinify.verbose) console.log("JSMinify.minifyAsOneJs(" + src + " => " + distFile + ")");
     capture = [];
 
     // crawl asynchronously
@@ -500,7 +509,7 @@ function minifyAsOneJs(src, distFile, callback) {
  */
 function minifyEachAndEveryJs(src, dist, cbEachOne, cbComplete) {
 
-    if(global.commandArgs.isVerbose()) console.log("JSMinify.minifyEachAndEveryJs(src: " + src + " => dist: " + dist + ")");
+    if(JSMinify.verbose) console.log("JSMinify.minifyEachAndEveryJs(src: " + src + " => dist: " + dist + ")");
     
     capture = [];
 
@@ -522,12 +531,13 @@ function minifyEachAndEveryJs(src, dist, cbEachOne, cbComplete) {
             function() {
                 asyncScope.inFlight--;
 
+                if(JSMinify.verbose) console.log("\tfinished file: " + capture[i]);
                 if (cbEachOne != null) {
                     cbEachOne(null, template, mangled);
                 }
 
                 if (asyncScope.inFlight == 0) {
-                    console.log("\tminifyEachAndEveryJs finished!");
+                    if(JSMinify.verbose) console.log("\tminifyEachAndEveryJs finished!");
                     if (cbComplete != null) {
                         cbComplete();
                     }
