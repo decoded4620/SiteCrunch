@@ -1,0 +1,64 @@
+{
+    "test-xml":{
+        "queue":[
+            { "src" : "public/xml/",                 "dest" : "public/xml-dist/",                                "format" : "xml",   "ignore" : null,    "include" : null,    "type" : "mapped" }
+        ]
+    },
+    "content":{
+        "queue":[
+            { "src" : "public/html/",                "dest" : "public/html-dist/",                               "format" : "html",  "ignore" : null,    "include" : null,    "type" : "mapped" },
+            { "src" : "public/json/",                "dest" : "public/json-dist/",                               "format" : "json",  "ignore" : null,    "include" : null,    "type" : "mapped" },
+            { "src" : "public/css/",                 "dest" : "public/css-dist/",                                "format" : "css",   "ignore" : null,    "include" : null,    "type" : "mapped" }
+        ]
+    },
+    
+    "js-app-bundles":{
+        "queue":[
+            { "src" : "public/js/app/code/",         "dest" : "public/js-dist/modules/app-code.min.js",          "format" : "js",    "ignore" : null,    "include" : null,    "type" : "concat" }, 
+            { "src" : "public/js/app/controllers/",  "dest" : "public/js-dist/modules/app-controllers.min.js",   "format" : "js",    "ignore" : null,    "include" : null,    "type" : "concat" }, 
+            { "src" : "public/js/app/functions/",    "dest" : "public/js-dist/modules/app-functions.min.js",     "format" : "js",    "ignore" : null,    "include" : null,    "type" : "concat" }, 
+            { "src" : "public/js/app/services/",     "dest" : "public/js-dist/modules/app-services.min.js",      "format" : "js",    "ignore" : null,    "include" : null,    "type" : "concat" }, 
+            { "src" : "public/js/app/utils/",        "dest" : "public/js-dist/modules/app-utils.min.js",         "format" : "js",    "ignore" : null,    "include" : null,    "type" : "concat" }
+        ]
+    },
+    
+    "one-giant-js":{
+        "queue":[
+            { "src" : "public/js/",              "dest" : "public/js-dist/monolith/app-min.js",                           "format" : "js",    "ignore" : [".partial.js"],    "include" : null,    "type" : "concat" }
+        ]
+    },
+    
+    "mapped-js":{
+        "queue":[
+            { "src" : "public/js/app/",              "dest" : "public/js-dist/app/",                             "format" : "js",    "ignore" : null,    "include" : null,    "type" : "mapped" }
+        ]
+    },
+    
+    "js-partials":{
+        "queue":[
+            { "src" : "public/js/partials/",         "dest" : "public/js-dist/partials/",                        "format" : "js",    "ignore" : null,    "include" : null,    "type" : "mapped" }
+        ]
+    },
+    "css-bundles":{
+        "queue":[
+            { "src" : "public/css/animations/",      "dest" : "public/css-dist/modules/animations.min.css",      "format" : "css",   "ignore" : null,    "include" : null,    "type" : "concat" }, 
+            { "src" : "public/css/shared/",          "dest" : "public/css-dist/modules/css-shared.min.css",      "format" : "css",   "ignore" : null,    "include" : null,    "type" : "concat" }
+        ]
+    },
+    "one-giant-css":{
+        "queue":[
+            { "src" : "public/css/",                 "dest" : "public/css-dist/monolith/all.min.css",                     "format" : "css",   "ignore" : ["bootstrap.css","bootstrap-theme.css"],    "include" : null,    "type" : "concat" }
+        ]
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
